@@ -10,19 +10,25 @@ ui <- dashboardPage(skin = "purple",
   dashboardSidebar(
     width = 200,
     sidebarMenu(id = "sidebar", 
-      menuItem("Virus", tabName = "virus"),
+      menuItem("Virus", tabName = "virus", icon = icon("ellipsis-v")),
       div( id = 'sidebar_virus',
            conditionalPanel("input.sidebar == 'virus'",
                             selectInput("proteinInput", "Select a Protein", choices = c("Show All"), selected = "Show All")
                             )
            ),
       
-      menuItem("Epitope", tabName = "epitope"),
+      menuItem("Epitope", tabName = "epitope", icon = icon("flag")),
+      div( id = 'sidebar_epitope',
+           conditionalPanel("input.sidebar == 'epitope'"
+                            # selectizeInput("epitopeInput", "Epitope of Interest", choices = NULL, selected = NULL, multiple = TRUE),
+                            
+                            )
+           )
+      ),
       
-      menuItem("HLA", tabName = "hla"),
+      menuItem("HLA", tabName = "hla",icon = icon("fingerprint")),
       
       menuItem("Population", tabName = "populations", icon = icon("globe"))
-    )
   ),
   dashboardBody(
     tabItems(
@@ -33,7 +39,21 @@ ui <- dashboardPage(skin = "purple",
               box(title = "Epitopes", width = 12,
                   dataTableOutput("peptideDataTable")
                   )
+              ),
+      tabItem(tabName = "epitope",
+              fluidRow(
+                box(h1("Explore SARS-CoV-2 Epitopes"),
+                    br(),
+                    em("If your epitope is not found, the closest string match will be displayed."),
+                    br(),
+                    textInput("epitopeInput", "Find Epitope", value = ""),
+                    width = 6, height = 300),
+                box(width = 6, height = 300)
+              ),
+              box(title = "Filtered Epitope", width = 12,
+                  dataTableOutput("epitopeDataTable")
               )
+      )
     )
   )
 )
@@ -42,8 +62,9 @@ ui <- dashboardPage(skin = "purple",
 # Define server logic required to draw a histogram ----
 server <- function(input, output, session) {
   load('~/neocovid-app/app/data/forApp.Rda')
-  output$test <- renderDataTable(predictions)
   
+  ##### Viral View #####
+  # Get protein name options
   observe({
     updateSelectInput(
       session,
@@ -53,6 +74,7 @@ server <- function(input, output, session) {
     )
   })
   
+  # Subset to selected protein
   subsetProteins <- reactive({
     if(input$proteinInput == "Show All"){
       subsetProteins <- proteinSequences3
@@ -62,20 +84,10 @@ server <- function(input, output, session) {
     return(subsetProteins)
   })
   
-  
-  subsetEpis <- reactive({
-    if(input$proteinInput == "Show All"){
-      subsetEpis <- plotEpis
-    } else {
-      subsetEpis <- filter(plotEpis, Protein == input$proteinInput)
-    }
-    return(subsetEpis)
-  })
-  output$peptideDataTable <- renderDataTable(subsetEpis(), options = list(scrollX = TRUE, scrollY = TRUE))
-
+  # Output spatial plot
   output$mainPlotly <- renderPlotly({
     plotData <- subsetProteins()
-    plotEpisData <- subsetEpis()
+    plotEpisData <- plotEpis
     
     basePlot <- ggplot(data = plotData, aes(fill = Gene)) +
       geom_hline(yintercept = -1, colour = 'grey80', size = 2) +
@@ -88,10 +100,48 @@ server <- function(input, output, session) {
       geom_rect(data = plotEpisData, aes(xmin = peptide.polar_start, xmax = peptide.polar_end, ymin = y_new, ymax = y_new + 0.5)) +
       #
       scale_x_continuous(limits = c(min(plotData$polar_start), max(plotData$polar_end))) + 
-      scale_y_continuous(limits = c(-8,max(plotEpis$y_new)+1))
+      scale_y_continuous(limits = c(-8,max(plotEpis$y_new)+1)) +
+      theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
     #
-    ggplotly(basePlot) %>% layout(xaxis = list(rangeslider = list(type = "date")))
+    ggplotly(basePlot, source = "virusPlot") %>% layout(xaxis = list(rangeslider = list(type = "date")))
   })
+  
+  # Subset predictions to those in view (whether it's full, a single protein, or zoomed in)
+  filterPredictions <- reactive({
+    zoom <- event_data("plotly_relayout", "virusPlot")
+    # if plot just rendered, event_data is NULL
+    # if user double clicks for autozoom, then zoom$xaxis.autorange is TRUE
+    # if user resizes page, then zoom$width is pixels of plot width
+    if(input$proteinInput == "Show All" & (is.null(zoom) || names(zoom[1]) %in% c("xaxis.autorange", "width"))) {
+      # xlim <- "default of plot"
+      return(summPredictions)
+    } else if(input$proteinInput != "Show All") {
+      return(filter(summPredictions, Protein == input$proteinInput))
+    } else {
+      xmin <- zoom$`xaxis.range[0]`
+      xmax <- zoom$`xaxis.range[1]`
+      get_peptides <- filter(plotEpis, peptide.polar_start > xmin & peptide.polar_end < xmax)$Peptide
+      return(filter(summPredictions, Peptide %in% get_peptides))
+    }
+  })
+  # Output predictions table
+  output$peptideDataTable <- renderDataTable(filterPredictions(), options = list(scrollX = TRUE, scrollY = TRUE))
+  
+  ##### Epitope View #####
+  subsetEpitopes <- reactive({
+    if(input$epitopeInput == "") {
+      return(summPredictions)
+    } else if(input$epitopeInput %in% unique(summPredictions$Peptide)) {
+      return(filter(summPredictions, Peptide == input$epitopeInput))
+    } else {
+      sub_string <- grep(input$epitopeInput, unique(summPredictions$Peptide), value = TRUE)
+      get_dist <- lapply(unique(summPredictions$Peptide), function(y){ adist(input$epitopeInput, y) }) %>% unlist
+      closest_peptides <- unique(summPredictions$Peptide)[which(get_dist<3)]
+      return(filter(summPredictions, Peptide %in% union(sub_string, closest_peptides)))
+    }
+  })
+  
+  output$epitopeDataTable <- renderDataTable(subsetEpitopes(), options = list(scrollX = TRUE, scrollY = TRUE))
   
 }
 

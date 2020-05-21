@@ -111,6 +111,24 @@ summPredictions <- predictions %>%
 summPredictions <- dplyr::select(plotEpis, Peptide, Gene, Protein, Position) %>%
   full_join(summPredictions, by = c("Peptide" = "Epitope.Seq"))
 
+
+lapply(notFoundEpis$Peptide, function(x){
+  all_dist <- lapply(foundEpis$Peptide, function(y){
+    adist(x, y)
+  }) %>% unlist
+  if(length(which(all_dist<2))>0) {
+    d <- data.frame(Peptide = x, closestPeptide = foundEpis$Peptide[which(all_dist<2)])
+    e <- left_join(d, foundEpis, by = c('closestPeptide' = 'Peptide'))
+    return(e)
+  } else {
+    d <- data.frame(Peptide = x, closestPeptide = as.character(NA))
+    return(d)
+  }
+})
+
+
+
+
 save(colors, proteinSequences3, plotEpis, summPredictions, file = 'data/forApp.Rda')
 
 
