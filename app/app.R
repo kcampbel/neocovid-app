@@ -2,6 +2,7 @@ library(shiny)
 library(shinydashboard)
 library(DT)
 library(data.table)
+library(plotly)
 library(tidyverse)
 
 ##### ~~~~~ UI ~~~~~ #####
