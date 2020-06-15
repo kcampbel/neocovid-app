@@ -249,8 +249,8 @@ summPredictions2 <- summPredictions2II %>% mutate(Class = "II") %>% full_join(su
          `HLA Allele` = gsub("HLA-", "", `HLA Allele`))
 
 ###
-iedb <- fread('data/iedb20200602.epitope_full_v3.csv', skip = 1)
-uniqueIedbAnt <- unique(iedb$Description)
+# iedb <- fread('data/iedb20200602.epitope_full_v3.csv', skip = 1)
+# uniqueIedbAnt <- unique(iedb$Description)
 
 # getMoreII <- lapply(unique(summPredictions$Peptide), function(x){
 #   find <- lapply(uniqueIedbAnt, function(y){
@@ -275,11 +275,11 @@ uniqueIedbAnt <- unique(iedb$Description)
 ###
 tm <- fulldf %>% group_by(Country, World_Country) %>% summarise(n=n()) %>%
   dplyr::select(Country, World_Country)
-countryPopFreq <- freqcountry %>% left_join(tm) %>% 
+countryPopFreq <- freqcountry %>% left_join(tm) %>%
   dplyr::select(World_Country, Region, Locus, Superfamily, Allele, Country_Frequency, country_n)
 colnames(countryPopFreq) <- c('Country','Region', 'Locus','HLA Superfamily', 'HLA Allele',
                               "Allele Frequency", "N Individuals (Sampled)")
-#
+
 
 save(world, fulldf, countryPopFreq,
      colors,
