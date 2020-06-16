@@ -1,14 +1,14 @@
-# library(shiny)
-# library(shinydashboard)
-# library(DT)
-# library(data.table)
-# library(plotly)
-# # library(tidyverse)
-# library(leaflet)
-# library(wesanderson)
+library(shiny)
+library(shinydashboard)
+library(DT)
+library(data.table)
+library(plotly)
+library(tidyverse)
+library(leaflet)
+library(wesanderson)
 # 
 # load('~/neocovid-app/app/data/forApp.Rda')
-# load(file = url("https://github.com/kcampbel/neocovid-app/raw/master/app/data/forApp.Rda"))
+load(file = url("https://github.com/kcampbel/neocovid-app/raw/master/app/data/forApp.Rda"))
 
 
 ##### ~~~~~ UI ~~~~~ #####
