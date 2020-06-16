@@ -281,12 +281,48 @@ colnames(countryPopFreq) <- c('Country','Region', 'Locus','HLA Superfamily', 'HL
                               "Allele Frequency", "N Individuals (Sampled)")
 
 
-save(world, fulldf, countryPopFreq,
+#####
+published <- readxl::read_excel("~/neocovid-app/app/PublishedDatasets.xlsx", sheet = "Full List")
+published <- data.table(published)
+#
+pp <- data.table(Peptide = unique(published$Peptide))
+pp[, find := grep(Peptide, proteinSequences2$Sequence), by = c('Peptide')]
+pp[, Gene := proteinSequences2$Gene[find], by = c('Peptide', 'find')]
+pp[, ProteinAnn := proteinSequences2$Protein[find], by = c('Peptide', 'find')]
+pp[, Position := str_locate(proteinSequences2$Sequence[find], Peptide)[1], by = c('Peptide','find')]
+pp[, Position_end := str_locate(proteinSequences2$Sequence[find], Peptide)[2], by = c('Peptide','find')]
+
+ph <- data.table(`HLA Restriction` = unique(published$`HLA Restriction`))
+ph[, `HLA Allele` := gsub("HLA-", "", strsplit(`HLA Restriction`, split = " |;|,")), by = c('HLA Restriction')]
+
+p1 <- merge.data.table(published, pp, all = TRUE)
+p2 <- merge.data.table(p1, ph, all = TRUE, by = c("HLA Restriction"))
+publishedEpis <- p2
+
+
+#####
+populationFrequencies = data.table(countryPopFreq)
+plotProteins = data.table(proteinSequences3)
+mapEpis = data.table(plotEpis)
+predictions = data.table(summPredictions2)
+
+predictions[, hlaalleles := list(strsplit(`HLA Allele`, split = "/|-")), by = c('Peptide','HLA Allele')]
+predictions[, hlagene := list(strsplit(gsub("([A-Z]*\\d*)\\*\\d+:\\d+", "\\1", `HLA Allele`), split = "/|-")), by = c('Peptide','HLA Allele')]
+predictions[, hlafam := list(strsplit(gsub("([A-Z]*\\d*\\*\\d+):\\d+", "\\1", `HLA Allele`), split = "/|-")), by = c('Peptide','HLA Allele')]
+
+coverSets <- fread('~/Downloads/setCover_lines.tsv')
+
+save(world, 
+     # fulldf, 
+     populationFrequencies,
+     coverSets,
      colors,
-     proteinSequences3, 
-     plotEpis, summPredictions, summPredictions2,
+     plotProteins,
+     mapEpis, #summPredictions,
+     predictions,
+     publishedEpis,
      # uniqueIedbAnt,
-     file = 'data/forApp.Rda')
+     file = '~/neocovid-app/app/data/forApp.Rda')
 
 
 
