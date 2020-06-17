@@ -228,7 +228,7 @@ server <- function(input, output, session) {
       geom_rect(aes(xmin = chain_polar_start, xmax = chain_polar_end, ymin = -50, ymax = 0), fill = 'grey80', alpha = 0.3) +
       # Peptides
       # geom_col(data = forPlot, aes(x = peptide.polar_start, y = `N HLA Alleles`, fill = Gene)) +
-      geom_point(data = forPlot, aes(x = peptide.polar_start, y = 500-`Median Affinity (nM)`, colour = Gene, shape = hlagene), alpha = 0.8, size = 1.5) +
+      geom_point(data = forPlot, aes(x = peptide.polar_start, y = 500-`Median Affinity (nM)`, colour = Gene, shape = hlagene), fill=NA, alpha = 0.8, size = 1.5) +
       scale_color_manual(values = mycolors, na.value = 'grey80', guide = FALSE) +
       #
       scale_x_continuous(limits = c(min(plotProteins$polar_start), max(plotProteins$polar_end))) +
