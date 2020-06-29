@@ -89,6 +89,7 @@ bioRxiv 2020.03.30.016931; doi: https://doi.org/10.1101/2020.03.30.016931"),
                                     h2("")),
                                 box("Resources", collapsible = TRUE, collapsed = FALSE, width = 12)
                                 )
+                        )
                       )
                     )
 )
