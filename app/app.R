@@ -78,18 +78,23 @@ ui <- dashboardPage(skin = "purple",
                                 h1("Resources"),
                                 box("References", collapsible = TRUE, collapsed = FALSE, width = 12,
                                     h2("Prediction of SARS-CoV-2 epitopes across 9360 HLA class I alleles"),
-                                    em("Katie M. Campbell, Gabriela Steiner, Daniel K. Wells, Antoni Ribas, Anusha Kalbasi
-                                       bioRxiv 2020.03.30.016931; doi: )
-Katie M. Campbell, Gabriela Steiner, Daniel K. Wells, Antoni Ribas, Anusha Kalbasi
-bioRxiv 2020.03.30.016931; doi: https://doi.org/10.1101/2020.03.30.016931"),
-                                    h2(),
-                                box("Methods", collapsible = TRUE, collapsed = FALSE, width = 12,
-                                    h2("Input data"),
-                                    h2("Peptide-MHC binding predictions"),
-                                    h2("")),
-                                box("Resources", collapsible = TRUE, collapsed = FALSE, width = 12)
+                                    em("Katie M. Campbell, Gabriela Steiner, Daniel K. Wells, Antoni Ribas, Anusha Kalbasi"),
+                                    br(),
+                                    "bioRxiv 2020.03.30.016931; doi: https://doi.org/10.1101/2020.03.30.016931",
+                                    br(),br(),
+                                    h2("Landscape and Selection of Vaccine Epitopes in SARS-CoV-2"),
+                                    em("Christof C. Smith, Sarah Entwistle, Caryn Willis, Steven Vensko, Wolfgang Beck, Jason Garness, Maria Sambade, Eric Routh, Kelly Olsen, Julia Kodysh, Timothy O’Donnell, Carsten Haber, Kirsten Heiss, Volker Stadler, Erik Garrison, Oliver C. Grant, Robert J. Woods, Mark Heise, Benjamin G. Vincent, and Alex Rubinsteyn"),
+                                    br(),
+                                    "bioRxiv 2020.06.04.135004; doi: https://doi.org/10.1101/2020.06.04.135004"
+                                    )
+                                # box("Methods", collapsible = TRUE, collapsed = FALSE, width = 12,
+                                #     h2("Input data"),
+                                #     h2("Peptide-MHC binding predictions"),
+                                #     h2("")
+                                #     ),
+                                # box("Resources", collapsible = TRUE, collapsed = FALSE, width = 12)
                                 )
-                        )
+                        
                       )
                     )
 )
