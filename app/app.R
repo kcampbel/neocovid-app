@@ -1,14 +1,14 @@
-library(shiny)
-library(shinydashboard)
-library(DT)
-library(data.table)
-library(plotly)
-library(tidyverse)
-library(leaflet)
-library(wesanderson)
+# library(shiny)
+# library(shinydashboard)
+# library(DT)
+# library(data.table)
+# library(plotly)
+# library(tidyverse)
+# library(leaflet)
+# library(wesanderson)
 # 
 # load('~/neocovid-app/app/data/forApp.Rda')
-load(file = url("https://github.com/kcampbel/neocovid-app/raw/master/app/data/forApp.Rda"))
+# load(file = url("https://github.com/kcampbel/neocovid-app/raw/master/app/data/forApp.Rda"))
 
 
 ##### ~~~~~ UI ~~~~~ #####
@@ -21,7 +21,8 @@ ui <- dashboardPage(skin = "purple",
                                   menuItem("Home", tabName = "home", icon = icon("searchengin")),
                                   menuItem("Putative Epitopes", tabName = "epitopes", icon = icon("flag")),
                                   menuItem("HLA", tabName = "hla", icon = icon("fingerprint")),
-                                  menuItem("Populations", tabName = "populations", icon = icon("globe"))
+                                  menuItem("Populations", tabName = "populations", icon = icon("globe")),
+                                  menuItem("Resources", tabName = "resources", icon = icon("book-open"))
                       )
                     ),
                     ##### ~~~~~ BODY ~~~~~ ######
@@ -61,7 +62,7 @@ ui <- dashboardPage(skin = "purple",
                         ),
                         tabItem(tabName = "hla",
                                 box(width = 12, plotlyOutput("hlaPlot")),
-                                box("Top 10 HLA Types with the most predicted epitopes", width = 6, plotlyOutput('nEpiPlot')),
+                                box("Top HLA Types with the most predicted epitopes", width = 6, plotlyOutput('nEpiPlot')),
                                 box("N Predicted Epitopes per HLA Allele", width = 6, dataTableOutput("nEpi"))
                                 # tags$style(type = "text/css", "#map {height: calc(100vh - 80px) !important;}")
                         ),
@@ -69,9 +70,25 @@ ui <- dashboardPage(skin = "purple",
                                 tags$style(type = "text/css", "#map {height: calc(100vh - 80px) !important;}"),
                                 box(leafletOutput("worldmap"), width = 6),
                                 box("Cover Set Solution", width = 6, plotlyOutput("setCoverPlot")), 
-                                box("Population Allelic Frequencies", width = 8, collapsible = TRUE, collapsed = FALSE, dataTableOutput('populationAlleles')),
-                                box("Cover Sets", width = 4, dataTableOutput("coverSetData"))
-                        )
+                                box("Population Allelic Frequencies", width = 6, collapsible = TRUE, collapsed = FALSE, dataTableOutput('populationAlleles')),
+                                box("Query by Country", collapsible = TRUE, collapsed = FALSE, width = 6, dataTableOutput("coverSetData")),
+                                box("Query by Epitope", collapsible = TRUE, collapsed = FALSE, width = 12)
+                        ),
+                        tabItem(tabName = "resources",
+                                h1("Resources"),
+                                box("References", collapsible = TRUE, collapsed = FALSE, width = 12,
+                                    h2("Prediction of SARS-CoV-2 epitopes across 9360 HLA class I alleles"),
+                                    em("Katie M. Campbell, Gabriela Steiner, Daniel K. Wells, Antoni Ribas, Anusha Kalbasi
+                                       bioRxiv 2020.03.30.016931; doi: )
+Katie M. Campbell, Gabriela Steiner, Daniel K. Wells, Antoni Ribas, Anusha Kalbasi
+bioRxiv 2020.03.30.016931; doi: https://doi.org/10.1101/2020.03.30.016931"),
+                                    h2(),
+                                box("Methods", collapsible = TRUE, collapsed = FALSE, width = 12,
+                                    h2("Input data"),
+                                    h2("Peptide-MHC binding predictions"),
+                                    h2("")),
+                                box("Resources", collapsible = TRUE, collapsed = FALSE, width = 12)
+                                )
                       )
                     )
 )
@@ -265,7 +282,7 @@ server <- function(input, output, session) {
     leaflet(world) %>%
       addProviderTiles(providers$CartoDB.Positron,
                        options = providerTileOptions(noWrap = TRUE)) %>%
-      addTiles() %>% 
+      addTiles() %>%
       # setView(42, 16, 4)
       setView(lng = autoZoomMap()$LON[1], lat = autoZoomMap()$LAT[1], zoom = 2) #%>%
       # addCircleMarkers(~LON, ~LAT,
@@ -282,7 +299,7 @@ server <- function(input, output, session) {
       # )
   })
   output$populationAlleles <- renderDataTable(getPopulations(), options = list(scrollX = TRUE, scrollY = TRUE))
-  #
+  # 
   output$setCoverPlot <- renderPlotly({
     setkey(coverSets, World_Country)
     forPlot <- coverSets[.(unique(getPopulations()$Country))]
@@ -302,13 +319,13 @@ server <- function(input, output, session) {
   coverSetList <- reactive({
     setkey(coverSets, World_Country)
     filteredSets <- coverSets[.(unique(getPopulations()$Country))]
-    filteredSets2 <- filteredSets[, .(`N Peptides` = length(unique(Epitopes_order)),
+    filteredSets2 <- filteredSets[, .(`% Total Population` = max(perc), `N Peptides` = length(unique(Epitopes_order)),
                     Peptides = list(unique(Epitopes_order))), by = c('World_Country')]
     colnames(filteredSets2) <- gsub('World_', '', colnames(filteredSets2))
     # final <- filteredSets2[-order(`N Peptides`)]
     return(filteredSets2)
   })
-  output$coverSetData <- renderDataTable(coverSetList()[,c('Country','N Peptides','Peptides')],
+  output$coverSetData <- renderDataTable(coverSetList()[,c('Country','% Total Population','N Peptides','Peptides')],
                                          extensions = 'Buttons', 
                                          options = list(scrollX = TRUE, scrollY = TRUE,
                                                         dom = 'Blfrtip',
